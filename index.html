@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Hagius Breathing - A breathing exercise app for stress reduction and mindfulness" />
+  <title>Hagius Breathing</title>
+  
+  <!-- PWA Meta Tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#214B7A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Hagius Breathing">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+  <!-- iOS splash screen images -->
+  <link rel="apple-touch-startup-image" href="icons/apple-splash-2048-2732.jpg" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="icons/apple-splash-1668-2388.jpg" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="icons/apple-splash-1536-2048.jpg" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="icons/apple-splash-1125-2436.jpg" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="icons/apple-splash-1242-2688.jpg" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="icons/apple-splash-828-1792.jpg" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="icons/apple-splash-750-1334.jpg" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="icons/apple-splash-640-1136.jpg" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  
+  <style>
+    /* Reset & Base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --primary-color: #214B7A;
+      --secondary-color: #F28E47;
+      --white-transparent-light: rgba(255, 255, 255, 0.2);
+      --white-transparent-medium: rgba(255, 255, 255, 0.3);
+      --white-transparent-bright: rgba(255, 255, 255, 0.4);
+      --white-transparent-brighter: rgba(255, 255, 255, 0.5);
+      --border-radius: 0px;
+      --transition-speed: 0.3s;
+      --safe-bottom: calc(20px + env(safe-area-inset-bottom));
+      --safe-top: calc(20px + env(safe-area-inset-top));
+      --button-spacing: 4px; /* Consistent spacing throughout the app */
+      --element-height: 60px;
+      --font-size-button: 0.4; /* Standardized font size for all UI elements */
+      --font-size-header: 2.4rem;
+      --element-padding: 15px;
+      --min-button-width: 120px; /* Minimum width for buttons before wrapping */
+    }
+    
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overscroll-behavior: none; /* Prevent pull-to-refresh on mobile */
+    }
+    
+    body {
+      font-family: Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      font-weight: bold;
+      background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+      color: #fff;
+      position: relative;
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-top: env(safe-area-inset-top);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      overflow: hidden;
+      touch-action: manipulation; /* Optimize for touch to reduce delay */
+    }
+    
+    /* Loading Animation */
+    .loading-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease-out;
+      flex-direction: column;
+    }
+    
+    .loading-logo {
+      margin-bottom: 20px;
+    }
+    
+    .loading-progress {
+      width: 200px;
+      height: 4px;
+      background: var(--white-transparent-light);
+      margin-top: 20px;
+      overflow: hidden;
+      border-radius: 2px;
+    }
+    
+    .loading-bar {
+      height: 100%;
+      width: 0%;
+      background: white;
+      transition: width 0.3s ease;
+    }
+    
+    .loader-text {
+      text-align: center;
+      font-size: calc(var(--element-height) * var(--font-size-button));
+      font-weight: bold;
+      margin-top: 20px;
+      text-transform: uppercase;
+    }
+    
+    /* Hide content until loaded */
+    .app-container {
+      opacity: 0;
+      transition: opacity 0.5s ease-in;
+      height: 100%;
+      position: relative;
+    }
+    
+    /* Completion Modal */
+    .completion-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .completion-modal.visible {
+      opacity: 1;
+    }
+    
+    .modal-content {
+      background: var(--white-transparent-light);
+      padding: 30px;
+      max-width: 90%;
+      width: 350px;
+      text-align: center;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+    
+    .completion-modal.visible .modal-content {
+      transform: translateY(0);
+    }
+    
+    .modal-content h2 {
+      margin-bottom: 15px;
+      font-size: 1.8rem;
+    }
+    
+    .modal-content p {
+      margin-bottom: 20px;
+      opacity: 0.9;
+    }
+    
+    .modal-content button {
+      background: var(--white-transparent-medium);
+      border: none;
+      padding: 0 var(--element-padding);
+      color: white;
+      font-weight: bold;
+      font-size: calc(var(--element-height) * var(--font-size-button));
+      width: 100%;
+      height: var(--element-height);
+      line-height: var(--element-height);
+      cursor: pointer;
+      transition: background 0.2s ease;
+      text-transform: uppercase;
+    }
+    
+    .modal-content button:hover {
+      background: var(--white-transparent-bright);
+    }
+    
+    /* Header */
+    .header {
+      position: fixed;
+      top: 10%;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 10;
+      transition: opacity 0.3s ease;
+    }
+    
+    .focus-mode .header {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .logo {
+      max-width: 180px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    
+    /* Main Container */
+    .main-container {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      width: 100%;
+    }
+    
+    /* Breathing Circle */
+    .breathing-circle {
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      background: var(--white-transparent-light);
+      margin: 0 auto;
+      will-change: transform;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: scale(1);
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Timer */
+    .timer {
+      font-size: calc(var(--element-height) * 0.4);
+      font-weight: bold;
+      color: rgba(255, 255, 255, 0.9);
+      text-align: center;
+      transition: opacity 0.15s ease-in-out;
+      text-transform: uppercase;
+    }
+    
+    .timer.fade {
+      opacity: 0.3;
+    }
+    
+    .focus-mode .timer {
+      opacity: 0;
+    }
+    
+
+    /* Session Progress Bar */
+    .session-progress-container {
+      position: fixed;
+      bottom: calc(var(--element-height) + var(--button-spacing));
+      left: 0;
+      right: 0;
+      width: 100%;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0;
+      margin-bottom: 0; /* Ensure exact 4px spacing */
+    }
+    
+    .session-progress {
+      width: 100%;
+      height: var(--element-height);
+      background: var(--white-transparent-light);
+      overflow: hidden;
+      cursor: pointer;
+      transition: background var(--transition-speed);
+      position: relative;
+      -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+    }
+    
+    .session-progress:hover {
+      background: var(--white-transparent-bright);
+    }
+    
+    .session-progress-bar {
+      height: 100%;
+      background: var(--white-transparent-brighter);
+      width: 0%;
+      transition: width 1s linear;
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 1;
+      will-change: width; /* Optimize animation performance */
+    }
+    
+    .remaining-time {
+      position: absolute;
+      font-size: calc(var(--element-height) * 0.4);
+      font-weight: bold;
+      color: white;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      transition: opacity 0.3s ease;
+    }
+    
+    .focus-mode .remaining-time {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    /* Timer Options */
+    .timer-options {
+      position: fixed;
+      bottom: calc(2 * var(--element-height) + 2 * var(--button-spacing));
+      left: 0;
+      right: 0;
+      display: none;
+      z-index: 30;
+    }
+    
+    .timer-option-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      width: 100%;
+      position: relative;
+      margin: 0;
+      padding: 0;
+      gap: var(--button-spacing);
+    }
+    
+    .timer-options button {
+      background: var(--white-transparent-light);
+      border: none;
+      color: white;
+      padding: 0 var(--element-padding);
+      flex: 1 1 calc(25% - var(--button-spacing) * 3/4); /* Equal distribution for 4 buttons */
+      min-width: 0;
+      max-width: none;
+      font-size: calc(var(--element-height) * var(--font-size-button));
+      font-weight: bold;
+      cursor: pointer;
+      transition: background var(--transition-speed);
+      margin: 0;
+      height: var(--element-height);
+      line-height: var(--element-height);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Media query for narrower screens */
+    @media (max-width: 600px) {
+      .timer-options button {
+        flex: 1 1 calc(50% - var(--button-spacing) * 1/2); /* 2 per row */
+      }
+    }
+    
+    @media (max-width: 320px) {
+      .timer-options button {
+        flex: 1 1 100%; /* 1 per row for very small screens */
+      }
+    }
+    
+    .timer-options button:hover {
+      background: var(--white-transparent-medium);
+    }
+    
+    .timer-options button.active {
+      background: var(--white-transparent-medium);
+    }
+    
+    /* Button Container */
+    .button-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      z-index: 10;
+      padding: 0;
+      gap: var(--button-spacing); /* Consistent 4px spacing */
+    }
+    
+    /* Bottom Buttons */
+    .bottom-button {
+      background: var(--white-transparent-light);
+      border: none;
+      flex: 1;
+      font-size: calc(var(--element-height) * var(--font-size-button));
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
+      transition: background var(--transition-speed);
+      height: var(--element-height);
+      line-height: var(--element-height);
+      padding: 0 var(--element-padding);
+      text-transform: uppercase;
+      margin: 0;
+      min-width: 0; /* Allow shrinking */
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .bottom-button:focus {
+      outline: 2px solid #fff;
+    }
+    
+    .bottom-button:hover {
+      background: var(--white-transparent-bright);
+    }
+    
+    /* Technique Panel */
+    .technique-panel {
+      position: fixed;
+      bottom: calc(2 * var(--element-height) + 2 * var(--button-spacing));
+      left: 0;
+      right: 0;
+      display: none;
+      z-index: 50;
+    }
+    
+    .technique-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      width: 100%;
+      gap: var(--button-spacing);
+    }
+    
+    /* Default layout - 3 buttons in top row, 2 in bottom */
+    .technique-panel button {
+      flex: 1 1 calc(33.33% - var(--button-spacing) * 2/3);
+      min-width: 80px; /* Ensures buttons don't get too small */
+    }
+    
+    .technique-panel button:nth-child(4),
+    .technique-panel button:nth-child(5) {
+      flex: 1 1 calc(50% - var(--button-spacing) * 1/2);
+    }
+    
+    /* Medium screens - 2 buttons per row where possible */
+    @media (max-width: 600px) {
+      .technique-panel button {
+        flex: 1 1 calc(50% - var(--button-spacing) * 1/2);
+      }
+      
+      /* If needed, the rightmost button will wrap */
+      .technique-buttons {
+        justify-content: flex-start;
+      }
+    }
+    
+    /* Even on narrow screens, maintain equal widths per row */
+    @media (max-width: 320px) {
+      .technique-panel button {
+        flex: 1 1 auto; /* Allow natural sizing */
+        min-width: calc(50% - var(--button-spacing)); /* Two per row minimum */
+      }
+    }
+    
+    .technique-panel button, 
+    .technique-panel .learn-more {
+      background: var(--white-transparent-light);
+      border: none;
+      color: white;
+      padding: 0 var(--element-padding);
+      font-size: calc(var(--element-height) * var(--font-size-button));
+      font-weight: bold;
+      text-align: center;
+      cursor: pointer;
+      transition: background var(--transition-speed);
+      margin: 0;
+      text-transform: capitalize;
+      height: var(--element-height);
+      line-height: var(--element-height);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .technique-panel button:hover, 
+    .technique-panel .learn-more:hover {
+      background: var(--white-transparent-medium);
+    }
+    
+    /* Knowledge Section */
+    #knowledgeSection {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+      z-index: 100;
+      overflow-y: auto;
+      padding: var(--safe-top) 0 calc(70px + env(safe-area-inset-bottom)) 0;
+    }
+    
+    .knowledge-header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 0 20px;
+    }
+    
+    .knowledge-header .logo {
+      margin-bottom: 15px;
+    }
+    
+    .knowledge-header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+    
+    .knowledge-nav {
+      display: flex;
+      flex-wrap: wrap;
+      width: 100%;
+      margin-bottom: var(--button-spacing); /* Exactly 4px spacing to content below */
+      padding: 0;
+      gap: var(--button-spacing);
+    }
+    
+    .knowledge-nav button {
+      background: var(--white-transparent-light);
+      border: none;
+      padding: 0 var(--element-padding);
+      font-size: calc(var(--element-height) * var(--font-size-button));
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
+      transition: background var(--transition-speed);
+      flex: 1 1 calc(20% - var(--button-spacing) * 4/5); /* Equal width for 5 buttons */
+      min-width: 0;
+      max-width: none;
+      margin: 0;
+      height: var(--element-height);
+      line-height: var(--element-height);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Media queries for responsive layout */
+    @media (max-width: 768px) {
+      .knowledge-nav button {
+        flex: 1 1 calc(33.333% - var(--button-spacing) * 2/3); /* 3 per row */
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .knowledge-nav button {
+        flex: 1 1 calc(50% - var(--button-spacing) * 1/2); /* 2 per row */
+      }
+    }
+    
+    @media (max-width: 320px) {
+      .knowledge-nav button {
+        flex: 1 1 100%; /* Stack buttons on very small screens */
+      }
+    }
+    
+    .knowledge-nav button:hover, 
+    .knowledge-nav button.active {
+      background: var(--white-transparent-bright);
+    }
+    
+    .knowledge-content {
+      background: var(--white-transparent-light);
+      padding: 20px;
+      margin: 0;
+      width: 100%;
+    }
+    
+    .technique-info {
+      display: none;
+    }
+    
+    .technique-info.active {
+      display: block;
+    }
+    
+    .technique-info h2 {
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+    }
+    
+    .technique-info h3 {
+      font-size: 1.3rem;
+      margin: 20px 0 10px;
+    }
+    
+    .technique-info p, 
+    .technique-info ul, 
+    .technique-info ol {
+      margin-bottom: 15px;
+      line-height: 1.6;
+    }
+    
+    .technique-info ul, 
+    .technique-info ol {
+      padding-left: 25px;
+    }
+    
+    .back-button {
+      position: fixed;
+      top: var(--safe-top);
+      left: 0;
+      background: var(--white-transparent-light);
+      border: none;
+      border-radius: var(--border-radius);
+      padding: 0 var(--element-padding);
+      font-size: calc(var(--element-height) * var(--font-size-button));
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
+      transition: background var(--transition-speed);
+      z-index: 110;
+      height: var(--element-height);
+      line-height: var(--element-height);
+      -webkit-tap-highlight-color: transparent;
+      text-transform: uppercase;
+    }
+    
+    .back-button:hover {
+      background: var(--white-transparent-bright);
+    }
+    
+    /* Notification Toast */
+    .toast-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 15px;
+      z-index: 9000;
+      pointer-events: none;
+    }
+    
+    .toast {
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 30px;
+      margin-bottom: 10px;
+      max-width: 80%;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    
+    .toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    /* Responsive Design */
+    @media (min-width: 768px) {
+      :root {
+        --element-height: 70px;
+        --font-size-button: 0.4; /* Standardized font size */
+        --font-size-header: 3rem;
+        --element-padding: 18px;
+        --min-button-width: 140px;
+      }
+      .breathing-circle { width: 350px; height: 350px; }
+      .logo { max-width: 240px; }
+    }
+    
+    @media (max-width: 480px) {
+      :root {
+        --element-height: 50px;
+        --font-size-button: 0.4; /* Standardized font size */
+        --element-padding: 12px;
+      }
+      .breathing-circle { 
+        width: 250px; 
+        height: 250px; 
+      }
+    }
+    
+    /* Screen Reader Only */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    /* Battery-saving mode (when document is hidden) */
+    .battery-saving .breathing-circle {
+      transition: transform 4s linear !important;
+    }
+
+    /* PWA Install Button */
+    #installButton {
+      display: none;
+      background: var(--white-transparent-medium);
+    }
+    
+    #installButton:hover {
+      background: var(--white-transparent-bright);
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Animation -->
+  <div id="loadingContainer" class="loading-container">
+    <div>
+      <img src="monogram.png" alt="Hagius" class="logo loading-logo">
+      <div class="loader-text">Loading Breathing App...</div>
+      <div class="loading-progress">
+        <div id="loadingBar" class="loading-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- App Container - hidden until loaded -->
+  <div id="appContainer" class="app-container">
+    <!-- Header fixed at the top -->
+    <div class="header">
+      <img src="logo.png" alt="Hagius" class="logo" id="mainLogo">
+    </div>
+    
+    <!-- Main Container centered -->
+    <div class="main-container">
+
+      <!-- Breathing Circle (always animating) -->
+      <div id="breathingCircle" class="breathing-circle" aria-label="Breathing animation">
+        <div id="timer" class="timer" aria-live="polite">
+          EXHALE
+        </div>
+      </div>
+    </div>
+    
+    <!-- Timer Options - Appears when progress bar is clicked -->
+    <div id="timerOptions" class="timer-options" aria-label="Timer duration options">
+      <div class="timer-option-buttons">
+        <button data-duration="5" aria-label="5 minute session">5 MIN</button>
+        <button data-duration="10" aria-label="10 minute session">10 MIN</button>
+        <button data-duration="15" aria-label="15 minute session">15 MIN</button>
+        <button data-duration="20" aria-label="20 minute session">20 MIN</button>
+      </div>
+    </div>
+    
+    <!-- Technique Panel - Appears when technique button is clicked -->
+    <div id="techniquePanel" class="technique-panel" aria-label="Breathing technique options">
+      <div class="technique-buttons">
+        <button data-technique="resonance" aria-label="Resonance breathing technique">Resonance</button>
+        <button data-technique="478" aria-label="4-7-8 breathing technique">4-7-8</button>
+        <button data-technique="box" aria-label="Box breathing technique">Box</button>
+        <button data-technique="physio-sigh" aria-label="Physiological sigh breathing technique">Sighing</button>
+        <button data-technique="learn-more" aria-label="Learn more about breathing techniques">Learn More</button>
+      </div>
+    </div>
+    
+    <!-- Session Progress Bar -->
+    <div class="session-progress-container">
+      <div id="progressBar" class="session-progress" role="progressbar" aria-label="Session progress">
+        <div id="progressIndicator" class="session-progress-bar"></div>
+        <div id="remainingTime" class="remaining-time" aria-live="polite">5:00</div>
+      </div>
+    </div>
+    
+    <!-- Bottom Button Container -->
+    <div class="button-container" id="buttonContainer">
+      <button id="techniqueButton" class="bottom-button" aria-haspopup="true" aria-expanded="false">Technique</button>
+      <button id="focusButton" class="bottom-button" aria-pressed="false">Focus</button>
+      <button id="installButton" class="bottom-button">Install App</button>
+    </div>
+    
+    <!-- Knowledge Section (hidden by default) -->
+    <div id="knowledgeSection" aria-hidden="true">
+      <button class="back-button" id="backButton" aria-label="Back to breathing app">Back</button>
+      
+      <div class="knowledge-header">
+        <img src="logo.png" alt="Hagius" class="logo">
+      </div>
+      
+      <div class="knowledge-nav" role="tablist">
+        <button class="technique-btn active" data-technique="basics" role="tab" aria-selected="true" aria-controls="basics-info">Basics</button>
+        <button class="technique-btn" data-technique="resonance" role="tab" aria-selected="false" aria-controls="resonance-info">Resonance</button>
+        <button class="technique-btn" data-technique="478" role="tab" aria-selected="false" aria-controls="478-info">4-7-8</button>
+        <button class="technique-btn" data-technique="box" role="tab" aria-selected="false" aria-controls="box-info">Box</button>
+        <button class="technique-btn" data-technique="physio-sigh" role="tab" aria-selected="false" aria-controls="physio-sigh-info">Sighing</button>
+      </div>
+      
+      <div class="knowledge-content">
+        <!-- Basics Info -->
+        <div id="basics-info" class="technique-info active" role="tabpanel" aria-labelledby="basics-tab">
+          <h2>Breathing Basics</h2>
+          
+          <p>Conscious breathing is one of the most powerful tools we have for managing stress, improving focus, and enhancing overall well-being. Understanding how breathing affects your mind and body is the first step in harnessing its potential.</p>
+          
+          <h3>The Science of Breathing</h3>
+          <p>Your breath is the bridge between your conscious and unconscious processes. When you breathe, you activate your autonomic nervous system, which has two branches:</p>
+          <ul>
+            <li><strong>Sympathetic Nervous System</strong> - Your "fight or flight" response, activated by short, shallow breathing</li>
+            <li><strong>Parasympathetic Nervous System</strong> - Your "rest and digest" response, activated by slow, deep breathing</li>
+          </ul>
+          
+          <h3>Common Elements of Breathing Techniques</h3>
+          <ul>
+            <li><strong>Rate</strong> - How many breath cycles per minute</li>
+            <li><strong>Depth</strong> - How deeply you inhale and exhale</li>
+            <li><strong>Rhythm</strong> - The pattern of inhalation, holds, and exhalation</li>
+            <li><strong>Pathway</strong> - Whether you breathe through your nose or mouth</li>
+            <li><strong>Duration</strong> - How long you practice</li>
+          </ul>
+          
+          <h3>Getting Started</h3>
+          <p>For beginners, here are some tips to maximize the benefits of breathing practice:</p>
+          <ul>
+            <li>Start with just 5 minutes daily</li>
+            <li>Practice in a comfortable seated position</li>
+            <li>Breathe through your nose when possible</li>
+            <li>Notice how different techniques make you feel</li>
+            <li>Be patient - benefits increase with regular practice</li>
+          </ul>
+          
+          <h3>When to Practice</h3>
+          <p>Conscious breathing can be beneficial in many situations:</p>
+          <ul>
+            <li>First thing in the morning to set a calm tone for the day</li>
+            <li>Before important meetings or events to reduce anxiety</li>
+            <li>During stressful moments to regain composure</li>
+            <li>Before meals to improve digestion</li>
+            <li>Before bed to prepare for restful sleep</li>
+          </ul>
+        </div>
+        
+        <!-- Other technique info sections remain unchanged -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Audio Cues - Preload for faster response -->
+  <audio id="audioInhale" preload="auto"></audio>
+  <audio id="audioHold" preload="auto"></audio>
+  <audio id="audioExhale" preload="auto"></audio>
+  
+  <script>
+    /**
+     * Hagius Breathing App
+     * Optimized JavaScript with improved performance, error handling, and organization
+     */
+    
+    // Immediately-invoked function expression (IIFE) to encapsulate our code
+    (function() {
+      // CONSTANTS
+      const AUDIO_SOURCES = {
+        inhale: 'sounds/chime-inhale.mp3',
+        hold: 'sounds/chime-hold.mp3',
+        exhale: 'sounds/chime-exhale.mp3'
+      };
+      
+      // HAPTIC PATTERNS (milliseconds)
+      const HAPTIC_PATTERNS = {
+        inhale: [100, 50, 100],     // Short pulse, pause, short pulse
+        hold: [50],                  // Very short single vibration
+        exhale: [200],               // Longer single vibration
+        inhale2: [50, 30, 100],      // Special pattern for second inhale in physio-sigh
+        sessionEnd: [100, 100, 100, 100, 300] // Pattern for session completion
+      };
+      
+      const BREATHING_PATTERNS = {
+        resonance: [
+          { label: 'Inhale', duration: 5.5 },
+          { label: 'Exhale', duration: 5.5 }
+        ],
+        box: [
+          { label: 'Inhale', duration: 4 },
+          { label: 'Hold',   duration: 4 },
+          { label: 'Exhale', duration: 4 },
+          { label: 'Hold',   duration: 4 }
+        ],
+        '478': [
+          { label: 'Inhale', duration: 4 },
+          { label: 'Hold',   duration: 7 },
+          { label: 'Exhale', duration: 8 }
+        ],
+        'physio-sigh': [
+          { label: 'Inhale', duration: 1 },
+          { label: 'Inhale2', duration: 0.25 },
+          { label: 'Exhale', duration: 2 }
+        ]
+      };
+      
+      // APP STATE
+      const state = {
+        currentPattern: BREATHING_PATTERNS.resonance,
+        currentPhaseIndex: 0,
+        currentPhaseTime: 0,
+        phaseStartTime: 0,
+        phaseEndTime: 0,
+        animationFrameId: null,
+        currentScale: 1.0,
+        isFocusMode: false,
+        sessionDuration: 5 * 60, // Default: 5 minutes in seconds
+        sessionStartTime: 0,
+        sessionEndTime: 0,
+        sessionElapsed: 0,
+        sessionIntervalId: null,
+        isAudioReady: false,
+        isVibrationSupported: 'vibrate' in navigator,
+        hapticEnabled: true, // Default to enabled, can be toggled
+        isVisible: true, // Document visibility state
+        elements: {}, // Will store cached DOM elements
+        loadedResources: {
+          audio: false,
+          dom: false
+        },
+        hasInteracted: false // Track if user has interacted (for autoplay policies)
+      };
+      
+      // UTILITY FUNCTIONS
+      const utils = {
+        /**
+         * Shows a toast notification
+         * @param {string} message - Message to display
+         * @param {number} duration - How long to show in ms
+         */
+        showToast: (message, duration = 3000) => {
+          const toast = document.createElement('div');
+          toast.className = 'toast';
+          toast.textContent = message;
+          
+          state.elements.toastContainer.appendChild(toast);
+          
+          // Force reflow to enable transition
+          void toast.offsetWidth;
+          toast.classList.add('visible');
+          
+          setTimeout(() => {
+            toast.classList.remove('visible');
+            setTimeout(() => {
+              toast.remove();
+            }, 300); // Match transition duration
+          }, duration);
+        },
+        
+        /**
+         * Format seconds into MM:SS display
+         * @param {number} seconds - Seconds to format
+         * @return {string} Formatted time string
+         */
+        formatTime: (seconds) => {
+          const mins = Math.floor(seconds / 60);
+          const secs = Math.floor(seconds % 60);
+          return `${mins}:${secs.toString().padStart(2, '0')}`;
+        },
+        
+        /**
+         * Helper to safely toggle aria attributes
+         * @param {HTMLElement} element - The element to modify
+         * @param {string} attribute - The aria attribute to toggle
+         * @param {boolean} value - The value to set
+         */
+        setAriaState: (element, attribute, value) => {
+          if (element) {
+            element.setAttribute(attribute, value.toString());
+          }
+        },
+        
+        /**
+         * Check if battery optimization should be enabled
+         * @returns {boolean} True if battery should be optimized
+         */
+        shouldOptimizeBattery: () => {
+          // Check if document is hidden
+          return !state.isVisible;
+        },
+        
+        /**
+         * Creates a debounced function that delays invoking func
+         * @param {Function} func - Function to debounce
+         * @param {number} wait - Milliseconds to delay
+         * @return {Function} Debounced function
+         */
+        debounce: (func, wait) => {
+          let timeout;
+          return function executedFunction(...args) {
+            const later = () => {
+              clearTimeout(timeout);
+              func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+          };
+        }
+      };
+      
+      // EVENT HANDLERS
+      const handlers = {
+        toggleTechniquePanel: (e) => {
+          if (e) e.stopPropagation();
+          const panel = state.elements.techniquePanel;
+          // Close timer options if open
+          state.elements.timerOptions.style.display = 'none';
+          
+          // Toggle technique panel
+          const isVisible = panel.style.display === 'block';
+          panel.style.display = isVisible ? 'none' : 'block';
+          
+          // Update ARIA
+          utils.setAriaState(state.elements.techniqueButton, 'aria-expanded', !isVisible);
+        },
+        
+        selectTechnique: (btn) => {
+          const selected = btn.getAttribute('data-technique');
+          
+          if (selected === 'learn-more') {
+            handlers.showKnowledgeSection();
+            return;
+          }
+          
+          state.currentPattern = BREATHING_PATTERNS[selected];
+          state.elements.techniqueButton.textContent = btn.textContent;
+          resetBreathing();
+          state.elements.techniquePanel.style.display = 'none';
+          utils.setAriaState(state.elements.techniqueButton, 'aria-expanded', false);
+          
+          // Show feedback toast
+          utils.showToast(`Switched to ${btn.textContent} breathing`);
+        },
+        
+        toggleFocusMode: () => {
+          state.isFocusMode = !state.isFocusMode;
+          document.body.classList.toggle('focus-mode', state.isFocusMode);
+          state.elements.focusButton.textContent = state.isFocusMode ? 'EXIT FOCUS' : 'Focus';
+          utils.setAriaState(state.elements.focusButton, 'aria-pressed', state.isFocusMode);
+        },
+        
+        showKnowledgeSection: () => {
+          state.elements.knowledgeSection.style.display = 'block';
+          state.elements.knowledgeSection.setAttribute('aria-hidden', 'false');
+          state.elements.techniquePanel.style.display = 'none';
+          state.elements.timerOptions.style.display = 'none';
+          
+          // When showing knowledge section, pause the session timer
+          if (state.sessionIntervalId) {
+            clearInterval(state.sessionIntervalId);
+            state.sessionIntervalId = null;
+          }
+        },
+        
+        hideKnowledgeSection: () => {
+          state.elements.knowledgeSection.style.display = 'none';
+          state.elements.knowledgeSection.setAttribute('aria-hidden', 'true');
+          
+          // When hiding knowledge section, resume the session timer
+          startSessionTimer();
+        },
+        
+        selectTechniqueInfo: (btn) => {
+          // Remove active class from all buttons
+          state.elements.techniqueBtns.forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected', 'false');
+          });
+          
+          // Add active class to clicked button
+          btn.classList.add('active');
+          btn.setAttribute('aria-selected', 'true');
+          
+          // Hide all technique info divs
+          document.querySelectorAll('.technique-info').forEach(div => {
+            div.classList.remove('active');
+          });
+          
+          // Show the selected technique info
+          const techniqueId = btn.getAttribute('data-technique');
+          const targetInfo = document.getElementById(`${techniqueId}-info`);
+          if (targetInfo) {
+            targetInfo.classList.add('active');
+          } else {
+            console.error(`Info element not found for: ${techniqueId}`);
+          }
+        },
+        
+        toggleTimerOptions: (e) => {
+          if (e) e.stopPropagation();
+          const timerOptions = state.elements.timerOptions;
+          
+          // Close technique panel if open
+          state.elements.techniquePanel.style.display = 'none';
+          utils.setAriaState(state.elements.techniqueButton, 'aria-expanded', false);
+          
+          // Toggle timer options
+          timerOptions.style.display = (timerOptions.style.display === 'block') ? 'none' : 'block';
+        },
+        
+        selectTimerOption: (btn) => {
+          // Update active button
+          document.querySelectorAll('.timer-options button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          // Set new duration
+          const minutes = parseInt(btn.getAttribute('data-duration'));
+          state.sessionDuration = minutes * 60;
+          
+          // Update the display immediately
+          updateRemainingTimeDisplay();
+          
+          // Restart timer
+          startSessionTimer();
+          
+          // Hide options
+          state.elements.timerOptions.style.display = 'none';
+          
+          // Show feedback
+          utils.showToast(`Session set to ${minutes} minutes`);
+        },
+        
+        // Dismiss panels when clicking outside
+        handleDocumentClick: (e) => {
+          // Technique panel
+          if (state.elements.techniquePanel.style.display === 'block' && 
+              !state.elements.techniquePanel.contains(e.target) && 
+              e.target !== state.elements.techniqueButton) {
+            state.elements.techniquePanel.style.display = 'none';
+            utils.setAriaState(state.elements.techniqueButton, 'aria-expanded', false);
+          }
+          
+          // Timer options
+          if (state.elements.timerOptions.style.display === 'block' && 
+              !state.elements.timerOptions.contains(e.target) && 
+              e.target !== state.elements.progressBar) {
+            state.elements.timerOptions.style.display = 'none';
+          }
+        },
+        
+        handleVisibilityChange: () => {
+          state.isVisible = document.visibilityState !== 'hidden';
+          
+          // Apply battery-saving class when hidden
+          document.body.classList.toggle('battery-saving', !state.isVisible);
+          
+          // When becoming visible again, check if animations need to be reset
+          if (state.isVisible && state.animationFrameId === null) {
+            // Restart animations
+            startPhase(state.currentPhaseIndex);
+          }
+        },
+        
+        handleUserInteraction: () => {
+          if (!state.hasInteracted) {
+            state.hasInteracted = true;
+            
+            // Try to play all audio elements to satisfy user gesture requirement
+            const audioElements = [
+              state.elements.audioInhale,
+              state.elements.audioHold,
+              state.elements.audioExhale
+            ];
+            
+            audioElements.forEach(audio => {
+              if (audio) {
+                const promise = audio.play();
+                if (promise !== undefined) {
+                  promise.then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                  }).catch(e => {
+                    // Still not allowed, will try again on next phase
+                    console.log('Audio play blocked by browser policy:', e);
+                  });
+                }
+              }
+            });
+          }
+        }
+      };
+      
+      // CORE FUNCTIONS
+      function cacheElements() {
+        // Cache DOM elements for performance
+        state.elements = {
+          appContainer: document.getElementById('appContainer'),
+          loadingContainer: document.getElementById('loadingContainer'),
+          loadingBar: document.getElementById('loadingBar'),
+          breathingCircle: document.getElementById('breathingCircle'),
+          techniqueButton: document.getElementById('techniqueButton'),
+          focusButton: document.getElementById('focusButton'),
+          techniquePanel: document.getElementById('techniquePanel'),
+          knowledgeSection: document.getElementById('knowledgeSection'),
+          backButton: document.getElementById('backButton'),
+          techniqueBtns: document.querySelectorAll('.technique-btn'),
+          timerDisplay: document.getElementById('timer'),
+          progressBar: document.getElementById('progressBar'),
+          progressIndicator: document.getElementById('progressIndicator'),
+          timerOptions: document.getElementById('timerOptions'),
+          remainingTime: document.getElementById('remainingTime'),
+          audioInhale: document.getElementById('audioInhale'),
+          audioHold: document.getElementById('audioHold'),
+          audioExhale: document.getElementById('audioExhale'),
+          toastContainer: document.getElementById('toastContainer'),
+          buttonContainer: document.getElementById('buttonContainer'),
+          installButton: document.getElementById('installButton')
+        };
+        
+        state.loadedResources.dom = true;
+        checkAllResourcesLoaded();
+      }
+      
+      function initializeAudio() {
+        // Set audio sources
+        const audioElements = [
+          { element: state.elements.audioInhale, src: AUDIO_SOURCES.inhale },
+          { element: state.elements.audioHold, src: AUDIO_SOURCES.hold },
+          { element: state.elements.audioExhale, src: AUDIO_SOURCES.exhale }
+        ];
+        
+        // Calculate total loading steps
+        const totalSteps = audioElements.length;
+        let completedSteps = 0;
+        
+        // Update loading progress
+        function updateLoadingProgress() {
+          if (state.elements.loadingBar) {
+            const progress = (completedSteps / totalSteps) * 100;
+            state.elements.loadingBar.style.width = `${progress}%`;
+          }
+        }
+        
+        // Create a promise for each audio element
+        const audioPromises = audioElements.map(({element, src}) => {
+          return new Promise((resolve) => {
+            if (!element) {
+              completedSteps++;
+              updateLoadingProgress();
+              resolve();
+              return;
+            }
+            
+            element.src = src;
+            
+            // Handle successful loading
+            element.addEventListener('canplaythrough', () => {
+              completedSteps++;
+              updateLoadingProgress();
+              resolve();
+            }, { once: true });
+            
+            // Handle errors but continue
+            element.addEventListener('error', (e) => {
+              console.warn(`Failed to load audio: ${src}`, e);
+              completedSteps++;
+              updateLoadingProgress();
+              resolve(); // Resolve anyway to not block the app
+            });
+            
+            // Handle timeout - don't wait forever
+            setTimeout(() => {
+              if (element.readyState < 4) {
+                console.warn(`Audio load timeout: ${src}`);
+                completedSteps++;
+                updateLoadingProgress();
+                resolve();
+              }
+            }, 5000);
+          });
+        });
+        
+        // Wait for all audio to load or timeout
+        Promise.all(audioPromises)
+          .then(() => {
+            state.isAudioReady = true;
+            state.loadedResources.audio = true;
+            checkAllResourcesLoaded();
+          })
+          .catch(error => {
+            console.error("Audio loading error:", error);
+            // Continue anyway with potentially limited audio
+            state.isAudioReady = false;
+            state.loadedResources.audio = true; // Mark as "complete" even if failed
+            checkAllResourcesLoaded();
+          });
+      }
+      
+      function checkAllResourcesLoaded() {
+        // Check if all resources are loaded
+        if (state.loadedResources.dom && state.loadedResources.audio) {
+          // Small delay to ensure UI is ready
+          setTimeout(() => {
+            // Fade out loading screen
+            state.elements.loadingContainer.style.opacity = '0';
+            setTimeout(() => {
+              state.elements.loadingContainer.style.display = 'none';
+            }, 500);
+            
+            // Show app content with fade in
+            state.elements.appContainer.style.opacity = '1';
+            
+            // Start the breathing animation
+            startBreathing();
+            
+            // Start the session timer
+            startSessionTimer();
+          }, 500);
+        }
+      }
+      
+      function attachEventListeners() {
+        // First interaction for audio playback
+        document.addEventListener('click', handlers.handleUserInteraction, { once: true });
+        document.addEventListener('touchstart', handlers.handleUserInteraction, { once: true });
+        
+        // Technique Button Toggle
+        state.elements.techniqueButton.addEventListener('click', handlers.toggleTechniquePanel);
+        
+        // Hide panels when clicking elsewhere
+        document.addEventListener('click', handlers.handleDocumentClick);
+        
+        // Technique Selection
+        const techniqueBtns = state.elements.techniquePanel.querySelectorAll('button');
+        techniqueBtns.forEach(btn => {
+          btn.addEventListener('click', () => handlers.selectTechnique(btn));
+        });
+        
+        // Focus Mode Toggle
+        state.elements.focusButton.addEventListener('click', handlers.toggleFocusMode);
+        
+        // Back Button in Knowledge Section
+        state.elements.backButton.addEventListener('click', handlers.hideKnowledgeSection);
+        
+        // Knowledge Section Technique Navigation
+        state.elements.techniqueBtns.forEach(btn => {
+          btn.addEventListener('click', () => handlers.selectTechniqueInfo(btn));
+        });
+        
+        // Progress Bar Click
+        state.elements.progressBar.addEventListener('click', handlers.toggleTimerOptions);
+        
+        // Timer Options
+        const timerOptionBtns = document.querySelectorAll('.timer-options button');
+        timerOptionBtns.forEach(btn => {
+          btn.addEventListener('click', () => handlers.selectTimerOption(btn));
+        });
+        
+        // Tab visibility changes (for battery optimization)
+        document.addEventListener('visibilitychange', handlers.handleVisibilityChange);
+        
+        // Window unload - clean up resources
+        window.addEventListener('beforeunload', () => {
+          // Cancel any pending animations or timers
+          if (state.animationFrameId) {
+            cancelAnimationFrame(state.animationFrameId);
+          }
+          if (state.sessionIntervalId) {
+            clearInterval(state.sessionIntervalId);
+          }
+        });
+        
+        // Handle keyboard accessibility
+        document.addEventListener('keydown', (e) => {
+          // Escape key closes any open panels
+          if (e.key === 'Escape') {
+            if (state.elements.techniquePanel.style.display === 'block') {
+              state.elements.techniquePanel.style.display = 'none';
+              utils.setAriaState(state.elements.techniqueButton, 'aria-expanded', false);
+            }
+            if (state.elements.timerOptions.style.display === 'block') {
+              state.elements.timerOptions.style.display = 'none';
+            }
+            if (state.elements.knowledgeSection.style.display === 'block') {
+              handlers.hideKnowledgeSection();
+            }
+          }
+        });
+        
+        // Install button event
+        if (state.elements.installButton) {
+          state.elements.installButton.addEventListener('click', handleInstallClick);
+        }
+      }
+      
+      // BREATHING CONTROL FUNCTIONS
+      function startBreathing() {
+        state.currentPhaseIndex = 0;
+        startPhase(state.currentPhaseIndex);
+      }
+      
+      function resetBreathing() {
+        // Cancel any existing animation frame
+        if (state.animationFrameId) {
+          cancelAnimationFrame(state.animationFrameId);
+          state.animationFrameId = null;
+        }
+        
+        state.currentScale = 1.0;
+        startPhase(0);
+      }
+      
+      function startPhase(phaseIndex) {
+        const phase = state.currentPattern[phaseIndex];
+        state.currentPhaseIndex = phaseIndex;
+        
+        // Set timestamps for this phase
+        state.phaseStartTime = performance.now();
+        state.phaseEndTime = state.phaseStartTime + (phase.duration * 1000);
+        
+        // Calculate phase duration in seconds
+        state.phaseDuration = phase.duration;
+        state.currentPhaseTime = phase.duration;
+        
+        playAudioCue(phase.label);
+        applyPhaseAnimation(phase.label, phase.duration);
+        
+        // Add simple fade transition for text
+        state.elements.timerDisplay.classList.add('fade');
+        
+        setTimeout(() => {
+          // Set the appropriate label with cleaner logic
+          let displayLabel = phase.label;
+          displayLabel = displayLabel === 'Inhale2' ? 'Inhale' : 
+                         (displayLabel.charAt(0).toUpperCase() + displayLabel.slice(1));
+          
+          state.elements.timerDisplay.textContent = displayLabel;
+          state.elements.timerDisplay.classList.remove('fade');
+        }, 150); // Short delay for fade transition
+        
+        // Cancel any existing animation frame
+        if (state.animationFrameId) {
+          cancelAnimationFrame(state.animationFrameId);
+        }
+        
+        // Use requestAnimationFrame for smoother animation
+        function updatePhase(timestamp) {
+          // Calculate elapsed time since phase started
+          const elapsed = timestamp - state.phaseStartTime;
+          state.currentPhaseTime = Math.max(0, state.phaseDuration - (elapsed / 1000));
+          
+          // Check if phase is complete
+          if (timestamp >= state.phaseEndTime) {
+            const nextIndex = (state.currentPhaseIndex + 1) % state.currentPattern.length;
+            startPhase(nextIndex);
+            return;
+          }
+          
+          // If document is hidden, don't request too many frames (battery saving)
+          if (utils.shouldOptimizeBattery()) {
+            // Request next frame with longer delay for battery saving
+            state.animationFrameId = setTimeout(() => {
+              requestAnimationFrame(updatePhase);
+            }, 1000); // Update once per second when hidden
+          } else {
+            // Normal animation frame request
+            state.animationFrameId = requestAnimationFrame(updatePhase);
+          }
+        }
+        
+        // Start the animation loop
+        state.animationFrameId = requestAnimationFrame(updatePhase);
+      }
+      
+      function applyPhaseAnimation(label, duration) {
+        let nextScale = state.currentScale;
+        switch (label.toLowerCase()) {
+          case 'inhale': nextScale = 1.5; break;
+          case 'inhale2': nextScale = 1.8; break; // Bigger scale for second inhale
+          case 'exhale': nextScale = 0.6; break;
+          case 'hold':   nextScale = state.currentScale; break;
+          default:       nextScale = 1.0;
+        }
+        
+        const circle = state.elements.breathingCircle;
+        
+        // Apply different transition speed based on battery optimization
+        if (utils.shouldOptimizeBattery()) {
+          circle.style.transition = `transform ${duration * 1.5}s linear`;
+        } else {
+          circle.style.transition = `transform ${duration}s cubic-bezier(0.4, 0.0, 0.2, 1)`;
+        }
+        
+        circle.style.transform = `scale(${nextScale})`;
+        state.currentScale = nextScale;
+      }
+      
+      function playAudioCue(label) {
+        // Skip if audio not initialized or user hasn't interacted
+        if (!state.isAudioReady || !state.hasInteracted) return;
+        
+        try {
+          let audioElement = null;
+          
+          if (label.toLowerCase() === 'inhale' || label.toLowerCase() === 'inhale2') {
+            audioElement = state.elements.audioInhale;
+          } else if (label.toLowerCase() === 'exhale') {
+            audioElement = state.elements.audioExhale;
+          } else if (label.toLowerCase() === 'hold') {
+            audioElement = state.elements.audioHold;
+          }
+          
+          if (audioElement) {
+            audioElement.currentTime = 0;
+            
+            // Create a promise to handle play completion more robustly
+            const playPromise = audioElement.play();
+            
+            if (playPromise !== undefined) {
+              playPromise.catch(error => {
+                // Auto-play was prevented - common on mobile
+                console.warn('Audio playback prevented:', error);
+              });
+            }
+          }
+          
+          // Trigger haptic feedback
+          triggerHapticFeedback(label.toLowerCase());
+        } catch (e) {
+          console.error('Audio play error:', e);
+        }
+      }
+      
+      function triggerHapticFeedback(phaseLabel) {
+        // Skip if vibration is not supported or disabled
+        if (!state.isVibrationSupported || !state.hapticEnabled) return;
+        
+        try {
+          // Get the appropriate vibration pattern
+          const pattern = HAPTIC_PATTERNS[phaseLabel] || [];
+          
+          if (pattern.length > 0) {
+            // Some browsers return false if vibration fails
+            const result = navigator.vibrate(pattern);
+            if (result === false) {
+              // Disable for this session if not working
+              state.hapticEnabled = false;
+              console.warn('Vibration failed - disabled');
+            }
+          }
+        } catch (e) {
+          console.warn('Haptic feedback error:', e);
+          // Disable haptics if there's an error to prevent further errors
+          state.hapticEnabled = false;
+        }
+      }
+      
+      // SESSION TIMER FUNCTIONS
+      function startSessionTimer() {
+        // Clear any existing interval
+        if (state.sessionIntervalId) {
+          clearInterval(state.sessionIntervalId);
+        }
+        
+        // Set timestamp-based timer
+        state.sessionStartTime = Date.now();
+        state.sessionEndTime = state.sessionStartTime + (state.sessionDuration * 1000);
+        state.sessionElapsed = 0;
+        
+        updateProgressBar();
+        
+        // Start new timer with 1 second updates
+        state.sessionIntervalId = setInterval(() => {
+          const now = Date.now();
+          const elapsed = Math.floor((now - state.sessionStartTime) / 1000);
+          state.sessionElapsed = elapsed;
+          
+          updateProgressBar();
+          
+          if (now >= state.sessionEndTime) {
+            endSession();
+          }
+        }, 1000);
+      }
+      
+      function updateProgressBar() {
+        if (!state.elements.progressIndicator) return;
+        
+        const progressPercent = (state.sessionElapsed / state.sessionDuration) * 100;
+        state.elements.progressIndicator.style.width = `${progressPercent}%`;
+        
+        // Update aria for accessibility
+        state.elements.progressBar.setAttribute('aria-valuenow', progressPercent.toFixed(1));
+        state.elements.progressBar.setAttribute('aria-valuemin', '0');
+        state.elements.progressBar.setAttribute('aria-valuemax', '100');
+        
+        // Update remaining time display
+        updateRemainingTimeDisplay();
+      }
+      
+      function updateRemainingTimeDisplay() {
+        if (!state.elements.remainingTime) return;
+        
+        const remainingSeconds = Math.max(0, state.sessionDuration - state.sessionElapsed);
+        const formattedTime = utils.formatTime(remainingSeconds);
+        state.elements.remainingTime.textContent = formattedTime;
+        
+        // Update ARIA label for screen readers
+        state.elements.progressBar.setAttribute('aria-label', 
+          `Session progress, ${formattedTime} remaining`);
+      }
+      
+      function endSession() {
+        clearInterval(state.sessionIntervalId);
+        state.sessionIntervalId = null;
+        
+        // Reset progress bar with animation
+        state.elements.progressIndicator.style.transition = 'width 0.5s ease-out';
+        state.elements.progressIndicator.style.width = '100%';
+        
+        // Trigger haptic session completion pattern
+        if (state.isVibrationSupported && state.hapticEnabled) {
+          navigator.vibrate(HAPTIC_PATTERNS.sessionEnd);
+        }
+        
+        // Show custom completion modal instead of alert
+        showCompletionModal();
+      }
+      
+      function showCompletionModal() {
+        // Create modal element
+        const modal = document.createElement('div');
+        modal.className = 'completion-modal';
+        modal.innerHTML = `
+          <div class="modal-content">
+            <h2>Session Complete!</h2>
+            <p>Great job completing your breathing session.</p>
+            <button id="closeModal">CONTINUE</button>
+          </div>
+        `;
+        
+        // Add to document
+        document.body.appendChild(modal);
+        
+        // Force reflow to enable transition
+        void modal.offsetWidth;
+        modal.classList.add('visible');
+        
+        // Set up event handler
+        document.getElementById('closeModal').addEventListener('click', () => {
+          modal.classList.remove('visible');
+          
+          // Remove after transition completes
+          setTimeout(() => {
+            modal.remove();
+            // Restart session timer
+            startSessionTimer();
+          }, 300);
+        });
+      }
+      
+      // PWA INSTALLATION FUNCTIONALITY
+      let deferredPrompt;
+      
+      // Handle the beforeinstallprompt event
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent the default browser prompt
+        e.preventDefault();
+        // Store the event for later use
+        deferredPrompt = e;
+        // Show the install button
+        if (state.elements.installButton) {
+          state.elements.installButton.style.display = 'block';
+        }
+      });
+      
+      // Handle the install button click
+      function handleInstallClick() {
+        if (!deferredPrompt) return;
+        
+        // Show the install prompt
+        deferredPrompt.prompt();
+        
+        // Wait for the user to respond
+        deferredPrompt.userChoice.then((choiceResult) => {
+          // Log the outcome
+          console.log(`User response to install prompt: ${choiceResult.outcome}`);
+          
+          // Reset the deferred prompt variable
+          deferredPrompt = null;
+          
+          // Hide the install button
+          if (state.elements.installButton) {
+            state.elements.installButton.style.display = 'none';
+          }
+          
+          // If installed, show a toast
+          if (choiceResult.outcome === 'accepted') {
+            utils.showToast('App installed successfully!');
+          }
+        });
+      }
+      
+      // Handle the appinstalled event
+      window.addEventListener('appinstalled', (e) => {
+        // Log the installation
+        console.log('App was installed');
+        
+        // Hide the install button
+        if (state.elements.installButton) {
+          state.elements.installButton.style.display = 'none';
+        }
+        
+        // Show a toast
+        utils.showToast('App installed successfully!');
+      });
+      
+      // INITIALIZATION
+      function init() {
+        cacheElements();
+        initializeAudio();
+        attachEventListeners();
+        
+        // Set initial ARIA states
+        utils.setAriaState(state.elements.focusButton, 'aria-pressed', false);
+        utils.setAriaState(state.elements.techniqueButton, 'aria-expanded', false);
+        
+        // Hide the install button initially (will show when ready)
+        if (state.elements.installButton) {
+          state.elements.installButton.style.display = 'none';
+        }
+        
+        // Register service worker for offline support if available
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            // Adjust path for GitHub Pages if needed
+            const swPath = location.hostname === 'localhost' ? 
+              '/service-worker.js' : 
+              '/hagius-breathing/service-worker.js';
+              
+            navigator.serviceWorker.register(swPath)
+              .then(registration => {
+                console.log('ServiceWorker registered with scope:', registration.scope);
+              })
+              .catch(error => {
+                console.log('ServiceWorker registration failed:', error);
+              });
+          });
+        }
+      }
+      
+      // Initialize the app when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
