@@ -262,21 +262,16 @@
   left: 0;
   width: 100%;
   height: 100%;
-  overflow: visible; /* Allow stroke to render outside bounds */
+  overflow: hidden; /* Change from 'visible' to 'hidden' to prevent overflow */
 }
 
 .hold-progress circle {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.7);
-  stroke-width: 1.5px; /* Reduced from 3px to 1.5px */
-  stroke-linecap: butt;
-  cx: 50%;
-  cy: 50%;
-  r: calc(50% - 0.75px); /* Adjusted for thinner stroke */
-  transform-origin: center;
-  transform: rotate(-90deg); /* Start from top instead of right */
-  stroke-dasharray: 301.6; /* Full circumference */
-  stroke-dashoffset: 0; /* Start with full circle */
+  /* Update these properties */
+  cx: 50;
+  cy: 50;
+  r: 48; /* Use exact pixel values instead of percentages */
+  stroke-width: 1.5px;
+  stroke-linecap: round; /* Change from 'butt' to 'round' for smoother appearance */
 }
     
     /* Timer */
@@ -893,10 +888,11 @@
         </div>
         <!-- Hold progress indicator (circular loading bar) -->
         <div id="holdProgress" class="hold-progress" aria-hidden="true">
-          <svg viewBox="0 0 100 100">
-            <circle id="holdProgressCircle" cx="50" cy="50" r="48" stroke-dasharray="301.6" stroke-dashoffset="301.6" />
-          </svg>
-        </div>
+  <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+    <circle id="holdProgressCircle" cx="50" cy="50" r="48" 
+            stroke-dasharray="301.6" stroke-dashoffset="0" />
+  </svg>
+</div>
       </div>
     </div>
     
@@ -1837,21 +1833,23 @@
   state.currentPhaseTime = Math.max(0, state.phaseDuration - (elapsed / 1000));
   
   // Update hold progress indicator if in hold phase
-  if (isHoldPhase && state.elements.holdProgressCircle) {
-    const circle = state.elements.holdProgressCircle;
-    const circumference = parseFloat(circle.getAttribute('stroke-dasharray'));
-    const progressRatio = Math.min(1, elapsed / (phase.duration * 1000)); // Limit to 1 maximum
-    
-    // Dashoffset for clockwise animation from top
-    const dashOffset = circumference * progressRatio;
-    
-    // Apply the progress to the stroke-dashoffset
-    circle.style.strokeDashoffset = dashOffset.toString();
-    
-    // Hide immediately when complete to prevent overflow appearance
-    if (progressRatio >= 0.99) {
-      state.elements.holdProgress.style.opacity = '0';
-    }
+if (isHoldPhase && state.elements.holdProgressCircle) {
+  const circle = state.elements.holdProgressCircle;
+  const circumference = parseFloat(circle.getAttribute('stroke-dasharray'));
+  
+  // Make sure progressRatio never exceeds 1
+  const progressRatio = Math.min(0.999, elapsed / (phase.duration * 1000));
+  
+  // Keep the existing calculation direction
+  const dashOffset = circumference * progressRatio;
+  
+  // Apply the progress
+  circle.style.strokeDashoffset = dashOffset.toString();
+  
+  // Hide the progress circle just before completing to prevent any overflow artifacts
+  if (progressRatio > 0.98) {
+    state.elements.holdProgress.style.opacity = '0';
+  }
   }
   
   
