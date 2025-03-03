@@ -268,11 +268,15 @@
 .hold-progress circle {
   fill: none;
   stroke: rgba(255, 255, 255, 0.7);
-  stroke-width: 3px;
+  stroke-width: 1.5px; /* Reduced from 3px to 1.5px */
   stroke-linecap: butt;
   cx: 50%;
   cy: 50%;
-  r: calc(50% - 1.5px); /* Half width minus half of stroke width */
+  r: calc(50% - 0.75px); /* Adjusted for thinner stroke */
+  transform-origin: center;
+  transform: rotate(-90deg); /* Start from top instead of right */
+  stroke-dasharray: 301.6; /* Full circumference */
+  stroke-dashoffset: 0; /* Start with full circle */
 }
     
     /* Timer */
@@ -1827,24 +1831,31 @@
           cancelAnimationFrame(state.animationFrameId);
         }
         
-        // Use requestAnimationFrame for smoother animation
         function updatePhase(timestamp) {
-          // Calculate elapsed time since phase started
-          const elapsed = timestamp - state.phaseStartTime;
-          state.currentPhaseTime = Math.max(0, state.phaseDuration - (elapsed / 1000));
-          
-          // Update hold progress indicator if in hold phase
-          if (isHoldPhase && state.elements.holdProgressCircle) {
-            const circle = state.elements.holdProgressCircle;
-            const circumference = parseFloat(circle.getAttribute('stroke-dasharray'));
-            const progressRatio = elapsed / (phase.duration * 1000);
-            
-            // Reverse: as time progresses, increase dashoffset to make circle disappear clockwise
-            const dashOffset = circumference * progressRatio;
-            
-            // Apply the progress to the stroke-dashoffset
-            circle.style.strokeDashoffset = dashOffset.toString();
-          }
+  // Calculate elapsed time since phase started
+  const elapsed = timestamp - state.phaseStartTime;
+  state.currentPhaseTime = Math.max(0, state.phaseDuration - (elapsed / 1000));
+  
+  // Update hold progress indicator if in hold phase
+  if (isHoldPhase && state.elements.holdProgressCircle) {
+    const circle = state.elements.holdProgressCircle;
+    const circumference = parseFloat(circle.getAttribute('stroke-dasharray'));
+    const progressRatio = Math.min(1, elapsed / (phase.duration * 1000)); // Limit to 1 maximum
+    
+    // Dashoffset for clockwise animation from top
+    const dashOffset = circumference * progressRatio;
+    
+    // Apply the progress to the stroke-dashoffset
+    circle.style.strokeDashoffset = dashOffset.toString();
+    
+    // Hide immediately when complete to prevent overflow appearance
+    if (progressRatio >= 0.99) {
+      state.elements.holdProgress.style.opacity = '0';
+    }
+  }
+  
+  
+
           
           // Check if phase is complete
           if (timestamp >= state.phaseEndTime) {
