@@ -242,13 +242,12 @@
       position: relative;
     }
     
-    /* Breath Hold Loading Indicator - Updated positioning */
+    
+/* Breath Hold Loading Indicator - Fixed centering */
 .hold-progress {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
   width: 100%;
   height: 100%;
   border-radius: 50%;
@@ -258,22 +257,22 @@
 }
 
 .hold-progress svg {
-  width: 100%;
-  height: 100%;
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible; /* Allow stroke to render outside bounds */
 }
 
 .hold-progress circle {
   fill: none;
   stroke: rgba(255, 255, 255, 0.7);
-  stroke-width: 1px;
+  stroke-width: 3px;
   stroke-linecap: butt;
-  transform-origin: center;
-  transform: rotate(-90deg);
-  /* Adjust the circle to sit perfectly on the edge */
-  r: 48;  /* Slightly increased from 48 to account for stroke width */
+  cx: 50%;
+  cy: 50%;
+  r: calc(50% - 1.5px); /* Half width minus half of stroke width */
 }
     
     /* Timer */
