@@ -2149,6 +2149,7 @@
         cacheElements();
         initializeAudio();
         attachEventListeners();
+        detectSafariAndAdjust(); // Add Safari detection function
         
         // Set initial ARIA states
         utils.setAriaState(state.elements.focusButton, 'aria-pressed', false);
@@ -2175,6 +2176,28 @@
                 console.log('ServiceWorker registration failed:', error);
               });
           });
+        }
+      }
+      
+      // Safari detection and adjustment function
+      function detectSafariAndAdjust() {
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        
+        if (isSafari && isMac) {
+          const circle = document.getElementById('holdProgressCircle');
+          if (circle) {
+            circle.setAttribute('r', '43');
+            circle.setAttribute('stroke-dasharray', '270.2');
+            
+            const svg = circle.closest('svg');
+            if (svg) {
+              svg.style.width = '101%';
+              svg.style.height = '101%';
+              svg.style.left = '-0.5%';
+              svg.style.top = '-0.5%';
+            }
+          }
         }
       }
       
