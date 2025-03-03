@@ -271,7 +271,7 @@
 
 .hold-progress circle {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.5);
+  stroke: rgba(255, 255, 255, 0.7);
   stroke-width: 15px; /* Increased to match button height proportionally */
   stroke-linecap: butt; /* Changed from round to butt for sharp ends */
   transform-origin: center;
@@ -282,6 +282,23 @@
   r: 42.5; /* Adjusted for thicker stroke width */
   stroke-dasharray: 267; /* 2 * π * 42.5 */
   stroke-dashoffset: 0;
+}
+
+/* Safari-specific fix for breath hold progress */
+@media not all and (min-resolution:.001dpcm) { 
+    @supports (-webkit-appearance:none) {
+        .hold-progress svg {
+            width: 101%; /* Slightly larger to account for Safari rendering */
+            height: 101%;
+            left: -0.5%;
+            top: -0.5%;
+        }
+        
+        .hold-progress circle {
+            r: 43; /* Slight adjustment for Safari */
+            stroke-dasharray: 270.2; /* Recalculated circumference */
+        }
+    }
 }
     
     /* Timer - FIXED */
