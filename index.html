@@ -1694,3 +1694,461 @@
         
         // Hide panels when clicking elsewhere
         document.addEventListener('click', handlers.handleDocumentClick);
+        
+        // Technique Selection
+        const techniqueBtns = state.elements.techniquePanel.querySelectorAll('button');
+        techniqueBtns.forEach(btn => {
+          btn.addEventListener('click', () => handlers.selectTechnique(btn));
+        });
+        
+        // Focus Mode Toggle
+        state.elements.focusButton.addEventListener('click', handlers.toggleFocusMode);
+        
+        // Back Button in Knowledge Section
+        state.elements.backButton.addEventListener('click', handlers.hideKnowledgeSection);
+        
+        // Knowledge Section Technique Navigation
+        state.elements.techniqueBtns.forEach(btn => {
+          btn.addEventListener('click', () => handlers.selectTechniqueInfo(btn));
+        });
+        
+        // Progress Bar Click
+        state.elements.progressBar.addEventListener('click', handlers.toggleTimerOptions);
+        
+        // Timer Options
+        const timerOptionBtns = document.querySelectorAll('.timer-options button');
+        timerOptionBtns.forEach(btn => {
+          btn.addEventListener('click', () => handlers.selectTimerOption(btn));
+        });
+        
+        // Tab visibility changes (for battery optimization)
+        document.addEventListener('visibilitychange', handlers.handleVisibilityChange);
+        
+        // Window unload - clean up resources
+        window.addEventListener('beforeunload', () => {
+          // Cancel any pending animations or timers
+          if (state.animationFrameId) {
+            cancelAnimationFrame(state.animationFrameId);
+          }
+          if (state.sessionIntervalId) {
+            clearInterval(state.sessionIntervalId);
+          }
+        });
+        
+        // Handle keyboard accessibility
+        document.addEventListener('keydown', (e) => {
+          // Escape key closes any open panels
+          if (e.key === 'Escape') {
+            if (state.elements.techniquePanel.style.display === 'block') {
+              state.elements.techniquePanel.style.display = 'none';
+              utils.setAriaState(state.elements.techniqueButton, 'aria-expanded', false);
+            }
+            if (state.elements.timerOptions.style.display === 'block') {
+              state.elements.timerOptions.style.display = 'none';
+            }
+            if (state.elements.knowledgeSection.style.display === 'block') {
+              handlers.hideKnowledgeSection();
+            }
+          }
+        });
+        
+        // Install button event
+        if (state.elements.installButton) {
+          state.elements.installButton.addEventListener('click', handleInstallClick);
+        }
+      }
+      
+      // BREATHING CONTROL FUNCTIONS
+      function startBreathing() {
+        state.currentPhaseIndex = 0;
+        startPhase(state.currentPhaseIndex);
+      }
+      
+      function resetBreathing() {
+        // Cancel any existing animation frame
+        if (state.animationFrameId) {
+          cancelAnimationFrame(state.animationFrameId);
+          state.animationFrameId = null;
+        }
+        
+        state.currentScale = 1.0;
+        startPhase(0);
+      }
+      
+      function startPhase(phaseIndex) {
+        const phase = state.currentPattern[phaseIndex];
+        state.currentPhaseIndex = phaseIndex;
+        
+        // Set timestamps for this phase
+        state.phaseStartTime = performance.now();
+        state.phaseEndTime = state.phaseStartTime + (phase.duration * 1000);
+        
+        // Calculate phase duration in seconds
+        state.phaseDuration = phase.duration;
+        state.currentPhaseTime = phase.duration;
+        
+        playAudioCue(phase.label);
+        applyPhaseAnimation(phase.label, phase.duration);
+        
+        // Manage hold progress indicator
+        const isHoldPhase = phase.label.toLowerCase() === 'hold';
+        if (isHoldPhase && state.elements.holdProgress) {
+          // Reset and show the hold progress indicator
+          const circle = state.elements.holdProgressCircle;
+          const circumference = parseFloat(circle.getAttribute('stroke-dasharray'));
+          
+          // Initialize the hold progress - start with full circle
+          circle.style.strokeDashoffset = '0';
+          state.elements.holdProgress.style.opacity = '1';
+        } else if (state.elements.holdProgress) {
+          // Hide the hold progress for non-hold phases
+          state.elements.holdProgress.style.opacity = '0';
+        }
+        
+        // Add simple fade transition for text
+        state.elements.timerDisplay.classList.add('fade');
+        
+        setTimeout(() => {
+          // Set the appropriate label with cleaner logic
+          let displayLabel = phase.label;
+          displayLabel = displayLabel === 'Inhale2' ? 'Inhale' : 
+                         (displayLabel.charAt(0).toUpperCase() + displayLabel.slice(1));
+          
+          state.elements.timerDisplay.textContent = displayLabel;
+          state.elements.timerDisplay.classList.remove('fade');
+        }, 150); // Short delay for fade transition
+        
+        // Cancel any existing animation frame
+        if (state.animationFrameId) {
+          cancelAnimationFrame(state.animationFrameId);
+        }
+        
+        // Use requestAnimationFrame for smoother animation
+        function updatePhase(timestamp) {
+          // Calculate elapsed time since phase started
+          const elapsed = timestamp - state.phaseStartTime;
+          state.currentPhaseTime = Math.max(0, state.phaseDuration - (elapsed / 1000));
+          
+          // Update hold progress indicator if in hold phase
+          if (isHoldPhase && state.elements.holdProgressCircle) {
+            const circle = state.elements.holdProgressCircle;
+            const circumference = parseFloat(circle.getAttribute('stroke-dasharray'));
+            const progressRatio = elapsed / (phase.duration * 1000);
+            
+            // Reverse: as time progresses, increase dashoffset to make circle disappear clockwise
+            const dashOffset = circumference * progressRatio;
+            
+            // Apply the progress to the stroke-dashoffset
+            circle.style.strokeDashoffset = dashOffset.toString();
+          }
+          
+          // Check if phase is complete
+          if (timestamp >= state.phaseEndTime) {
+            const nextIndex = (state.currentPhaseIndex + 1) % state.currentPattern.length;
+            startPhase(nextIndex);
+            return;
+          }
+          
+          // If document is hidden, don't request too many frames (battery saving)
+          if (utils.shouldOptimizeBattery()) {
+            // Request next frame with longer delay for battery saving
+            state.animationFrameId = setTimeout(() => {
+              requestAnimationFrame(updatePhase);
+            }, 1000); // Update once per second when hidden
+          } else {
+            // Normal animation frame request
+            state.animationFrameId = requestAnimationFrame(updatePhase);
+          }
+        }
+        
+        // Start the animation loop
+        state.animationFrameId = requestAnimationFrame(updatePhase);
+      }
+      
+      function applyPhaseAnimation(label, duration) {
+        let nextScale = state.currentScale;
+        switch (label.toLowerCase()) {
+          case 'inhale': nextScale = 1.5; break;
+          case 'inhale2': nextScale = 1.8; break; // Bigger scale for second inhale
+          case 'exhale': nextScale = 0.6; break;
+          case 'hold':   nextScale = state.currentScale; break;
+          default:       nextScale = 1.0;
+        }
+        
+        const circle = state.elements.breathingCircle;
+        
+        // Apply different transition speed based on battery optimization
+        if (utils.shouldOptimizeBattery()) {
+          circle.style.transition = `transform ${duration * 1.5}s linear`;
+        } else {
+          circle.style.transition = `transform ${duration}s cubic-bezier(0.4, 0.0, 0.2, 1)`;
+        }
+        
+        circle.style.transform = `scale(${nextScale})`;
+        state.currentScale = nextScale;
+      }
+      
+      function playAudioCue(label) {
+        // Skip if audio not initialized or user hasn't interacted
+        if (!state.isAudioReady || !state.hasInteracted) return;
+        
+        try {
+          let audioElement = null;
+          
+          if (label.toLowerCase() === 'inhale' || label.toLowerCase() === 'inhale2') {
+            audioElement = state.elements.audioInhale;
+          } else if (label.toLowerCase() === 'exhale') {
+            audioElement = state.elements.audioExhale;
+          } else if (label.toLowerCase() === 'hold') {
+            audioElement = state.elements.audioHold;
+          }
+          
+          if (audioElement) {
+            audioElement.currentTime = 0;
+            
+            // Create a promise to handle play completion more robustly
+            const playPromise = audioElement.play();
+            
+            if (playPromise !== undefined) {
+              playPromise.catch(error => {
+                // Auto-play was prevented - common on mobile
+                console.warn('Audio playback prevented:', error);
+              });
+            }
+          }
+          
+          // Trigger haptic feedback
+          triggerHapticFeedback(label.toLowerCase());
+        } catch (e) {
+          console.error('Audio play error:', e);
+        }
+      }
+      
+      function triggerHapticFeedback(phaseLabel) {
+        // Skip if vibration is not supported or disabled
+        if (!state.isVibrationSupported || !state.hapticEnabled) return;
+        
+        try {
+          // Get the appropriate vibration pattern
+          const pattern = HAPTIC_PATTERNS[phaseLabel] || [];
+          
+          if (pattern.length > 0) {
+            // Some browsers return false if vibration fails
+            const result = navigator.vibrate(pattern);
+            if (result === false) {
+              // Disable for this session if not working
+              state.hapticEnabled = false;
+              console.warn('Vibration failed - disabled');
+            }
+          }
+        } catch (e) {
+          console.warn('Haptic feedback error:', e);
+          // Disable haptics if there's an error to prevent further errors
+          state.hapticEnabled = false;
+        }
+      }
+      
+      // SESSION TIMER FUNCTIONS
+      function startSessionTimer() {
+        // Clear any existing interval
+        if (state.sessionIntervalId) {
+          clearInterval(state.sessionIntervalId);
+        }
+        
+        // Set timestamp-based timer
+        state.sessionStartTime = Date.now();
+        state.sessionEndTime = state.sessionStartTime + (state.sessionDuration * 1000);
+        state.sessionElapsed = 0;
+        
+        updateProgressBar();
+        
+        // Start new timer with 1 second updates
+        state.sessionIntervalId = setInterval(() => {
+          const now = Date.now();
+          const elapsed = Math.floor((now - state.sessionStartTime) / 1000);
+          state.sessionElapsed = elapsed;
+          
+          updateProgressBar();
+          
+          if (now >= state.sessionEndTime) {
+            endSession();
+          }
+        }, 1000);
+      }
+      
+      function updateProgressBar() {
+        if (!state.elements.progressIndicator) return;
+        
+        const progressPercent = (state.sessionElapsed / state.sessionDuration) * 100;
+        state.elements.progressIndicator.style.width = `${progressPercent}%`;
+        
+        // Update aria for accessibility
+        state.elements.progressBar.setAttribute('aria-valuenow', progressPercent.toFixed(1));
+        state.elements.progressBar.setAttribute('aria-valuemin', '0');
+        state.elements.progressBar.setAttribute('aria-valuemax', '100');
+        
+        // Update remaining time display
+        updateRemainingTimeDisplay();
+      }
+      
+      function updateRemainingTimeDisplay() {
+        if (!state.elements.remainingTime) return;
+        
+        const remainingSeconds = Math.max(0, state.sessionDuration - state.sessionElapsed);
+        const formattedTime = utils.formatTime(remainingSeconds);
+        state.elements.remainingTime.textContent = formattedTime;
+        
+        // Update ARIA label for screen readers
+        state.elements.progressBar.setAttribute('aria-label', 
+          `Session progress, ${formattedTime} remaining`);
+      }
+      
+      function endSession() {
+        clearInterval(state.sessionIntervalId);
+        state.sessionIntervalId = null;
+        
+        // Reset progress bar with animation
+        state.elements.progressIndicator.style.transition = 'width 0.5s ease-out';
+        state.elements.progressIndicator.style.width = '100%';
+        
+        // Trigger haptic session completion pattern
+        if (state.isVibrationSupported && state.hapticEnabled) {
+          navigator.vibrate(HAPTIC_PATTERNS.sessionEnd);
+        }
+        
+        // Show custom completion modal instead of alert
+        showCompletionModal();
+      }
+      
+      function showCompletionModal() {
+        // Create modal element
+        const modal = document.createElement('div');
+        modal.className = 'completion-modal';
+        modal.innerHTML = `
+          <div class="modal-content">
+            <h2>Session Complete!</h2>
+            <p>Great job completing your breathing session.</p>
+            <button id="closeModal">CONTINUE</button>
+          </div>
+        `;
+        
+        // Add to document
+        document.body.appendChild(modal);
+        
+        // Force reflow to enable transition
+        void modal.offsetWidth;
+        modal.classList.add('visible');
+        
+        // Set up event handler
+        document.getElementById('closeModal').addEventListener('click', () => {
+          modal.classList.remove('visible');
+          
+          // Remove after transition completes
+          setTimeout(() => {
+            modal.remove();
+            // Restart session timer
+            startSessionTimer();
+          }, 300);
+        });
+      }
+      
+      // PWA INSTALLATION FUNCTIONALITY
+      let deferredPrompt;
+      
+      // Handle the beforeinstallprompt event
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent the default browser prompt
+        e.preventDefault();
+        // Store the event for later use
+        deferredPrompt = e;
+        // Show the install button
+        if (state.elements.installButton) {
+          state.elements.installButton.style.display = 'block';
+        }
+      });
+      
+      // Handle the install button click
+      function handleInstallClick() {
+        if (!deferredPrompt) return;
+        
+        // Show the install prompt
+        deferredPrompt.prompt();
+        
+        // Wait for the user to respond
+        deferredPrompt.userChoice.then((choiceResult) => {
+          // Log the outcome
+          console.log(`User response to install prompt: ${choiceResult.outcome}`);
+          
+          // Reset the deferred prompt variable
+          deferredPrompt = null;
+          
+          // Hide the install button
+          if (state.elements.installButton) {
+            state.elements.installButton.style.display = 'none';
+          }
+          
+          // If installed, show a toast
+          if (choiceResult.outcome === 'accepted') {
+            utils.showToast('App installed successfully!');
+          }
+        });
+      }
+      
+      // Handle the appinstalled event
+      window.addEventListener('appinstalled', (e) => {
+        // Log the installation
+        console.log('App was installed');
+        
+        // Hide the install button
+        if (state.elements.installButton) {
+          state.elements.installButton.style.display = 'none';
+        }
+        
+        // Show a toast
+        utils.showToast('App installed successfully!');
+      });
+      
+      // INITIALIZATION
+      function init() {
+        cacheElements();
+        initializeAudio();
+        attachEventListeners();
+        
+        // Set initial ARIA states
+        utils.setAriaState(state.elements.focusButton, 'aria-pressed', false);
+        utils.setAriaState(state.elements.techniqueButton, 'aria-expanded', false);
+        
+        // Hide the install button initially (will show when ready)
+        if (state.elements.installButton) {
+          state.elements.installButton.style.display = 'none';
+        }
+        
+        // Register service worker for offline support if available
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            // Adjust path for GitHub Pages if needed
+            const swPath = location.hostname === 'localhost' ? 
+              '/service-worker.js' : 
+              '/hagius-breathing/service-worker.js';
+              
+            navigator.serviceWorker.register(swPath)
+              .then(registration => {
+                console.log('ServiceWorker registered with scope:', registration.scope);
+              })
+              .catch(error => {
+                console.log('ServiceWorker registration failed:', error);
+              });
+          });
+        }
+      }
+      
+      // Initialize the app when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
