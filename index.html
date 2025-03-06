@@ -33,22 +33,39 @@
     }
     
     :root {
+      /* Color Variables */
       --primary-color: #214B7A;
       --secondary-color: #F28E47;
       --white-transparent-light: rgba(255, 255, 255, 0.2);
       --white-transparent-medium: rgba(255, 255, 255, 0.3);
       --white-transparent-bright: rgba(255, 255, 255, 0.4);
       --white-transparent-brighter: rgba(255, 255, 255, 0.5);
+      
+      /* Consistent Spacing System */
+      --space-1: 4px;   /* Base unit */
+      --space-2: 8px;   /* 2x base */
+      --space-3: 12px;  /* 3x base */
+      --space-4: 16px;  /* 4x base */
+      --space-5: 20px;  /* 5x base */
+      --space-6: 24px;  /* 6x base */
+      --space-8: 32px;  /* 8x base */
+      --space-10: 40px; /* 10x base */
+      --space-12: 48px; /* 12x base */
+      --space-16: 64px; /* 16x base */
+      
+      /* Component variables - now using spacing system */
       --border-radius: 0px;
       --transition-speed: 0.3s;
-      --safe-bottom: calc(20px + env(safe-area-inset-bottom));
-      --safe-top: calc(20px + env(safe-area-inset-top));
-      --button-spacing: 4px; /* Consistent spacing throughout the app */
+      --button-spacing: var(--space-1);
       --element-height: 60px;
-      --font-size-button: 0.4; /* Standardized font size for all UI elements */
+      --font-size-button: 0.4;
       --font-size-header: 2.4rem;
-      --element-padding: 15px;
-      --min-button-width: 120px; /* Minimum width for buttons before wrapping */
+      --element-padding: var(--space-4);
+      --min-button-width: 120px;
+      
+      /* Safe area variables - using spacing system */
+      --safe-bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
+      --safe-top: calc(var(--space-5) + env(safe-area-inset-top));
     }
     
     html {
@@ -94,14 +111,14 @@
     }
     
     .loading-logo {
-      margin-bottom: 20px;
+      margin-bottom: var(--space-5);
     }
     
     .loading-progress {
       width: 200px;
       height: 4px;
       background: var(--white-transparent-light);
-      margin-top: 20px;
+      margin-top: var(--space-5);
       overflow: hidden;
       border-radius: 2px;
     }
@@ -117,7 +134,7 @@
       text-align: center;
       font-size: calc(var(--element-height) * var(--font-size-button));
       font-weight: bold;
-      margin-top: 20px;
+      margin-top: var(--space-5);
       text-transform: uppercase;
     }
     
@@ -152,11 +169,11 @@
     
     .modal-content {
       background: var(--white-transparent-light);
-      padding: 30px;
+      padding: var(--space-8);
       max-width: 90%;
       width: 350px;
       text-align: center;
-      transform: translateY(20px);
+      transform: translateY(var(--space-5));
       transition: transform 0.3s ease;
     }
     
@@ -165,12 +182,12 @@
     }
     
     .modal-content h2 {
-      margin-bottom: 15px;
+      margin-bottom: var(--space-4);
       font-size: 1.8rem;
     }
     
     .modal-content p {
-      margin-bottom: 20px;
+      margin-bottom: var(--space-5);
       opacity: 0.9;
     }
     
@@ -196,12 +213,13 @@
     /* Header */
     .header {
       position: fixed;
-      top: 10%;
+      top: var(--space-16);
       left: 0;
       right: 0;
       text-align: center;
       z-index: 10;
       transition: opacity 0.3s ease;
+      margin-bottom: var(--space-10);
     }
     
     .focus-mode .header {
@@ -219,7 +237,7 @@
     /* Main Container */
     .main-container {
       position: absolute;
-      top: 45%;
+      top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
@@ -305,12 +323,13 @@
     .timer {
       font-size: calc(var(--element-height) * 0.4);
       font-weight: bold;
-      color: rgba(255, 255, 255, 0.9);
+      color: rgba(255, 255, 255, 0.95);
       text-align: center;
       transition: opacity 0.15s ease-in-out;
       text-transform: uppercase;
       position: relative;
       z-index: 2; /* Ensure timer is above other elements */
+      padding-top: var(--space-1);
     }
     
     .timer.fade {
@@ -575,17 +594,18 @@
     
     .knowledge-header {
       text-align: center;
-      margin-bottom: 30px;
-      padding: 0 20px;
+      margin-bottom: var(--space-8);
+      padding: 0 var(--space-5);
     }
     
     .knowledge-header .logo {
-      margin-bottom: 15px;
+      margin-bottom: var(--space-4);
     }
     
     .knowledge-header p {
       font-size: 1.1rem;
       opacity: 0.9;
+      margin-bottom: 0;
     }
     
     .knowledge-nav {
@@ -659,24 +679,24 @@
     
     .technique-info h2 {
       font-size: 1.8rem;
-      margin-bottom: 15px;
+      margin-bottom: var(--space-4);
     }
     
     .technique-info h3 {
       font-size: 1.3rem;
-      margin: 20px 0 10px;
+      margin: var(--space-5) 0 var(--space-2);
     }
     
     .technique-info p, 
     .technique-info ul, 
     .technique-info ol {
-      margin-bottom: 15px;
+      margin-bottom: var(--space-4);
       line-height: 1.6;
     }
     
     .technique-info ul, 
     .technique-info ol {
-      padding-left: 25px;
+      padding-left: var(--space-6);
     }
     
     .back-button {
@@ -712,7 +732,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding-top: 15px;
+      padding-top: var(--space-4);
       z-index: 9000;
       pointer-events: none;
     }
@@ -720,9 +740,9 @@
     .toast {
       background: rgba(0, 0, 0, 0.8);
       color: white;
-      padding: 12px 20px;
+      padding: var(--space-3) var(--space-5);
       border-radius: 30px;
-      margin-bottom: 10px;
+      margin-bottom: var(--space-2);
       max-width: 80%;
       text-align: center;
       opacity: 0;
@@ -741,22 +761,44 @@
         --element-height: 70px;
         --font-size-button: 0.4; /* Standardized font size */
         --font-size-header: 3rem;
-        --element-padding: 18px;
+        --element-padding: var(--space-5);
         --min-button-width: 140px;
       }
       .breathing-circle { width: 350px; height: 350px; }
       .logo { max-width: 240px; }
+      
+      /* Larger screens need slightly larger spacing */
+      .knowledge-header {
+        margin-bottom: var(--space-10);
+      }
+      
+      .technique-info h3 {
+        margin: var(--space-6) 0 var(--space-3);
+      }
     }
     
     @media (max-width: 480px) {
       :root {
         --element-height: 50px;
         --font-size-button: 0.4; /* Standardized font size */
-        --element-padding: 12px;
+        --element-padding: var(--space-3);
       }
       .breathing-circle { 
         width: 250px; 
         height: 250px; 
+      }
+      
+      /* Smaller screens need tighter spacing */
+      .knowledge-header {
+        margin-bottom: var(--space-6);
+      }
+      
+      .technique-info h2 {
+        margin-bottom: var(--space-3);
+      }
+      
+      .technique-info h3 {
+        margin: var(--space-4) 0 var(--space-2);
       }
     }
     
@@ -791,12 +833,12 @@
     /* iOS PWA Installation Tip */
     .ios-install-tip {
       position: fixed;
-      bottom: calc(var(--element-height) * 2 + var(--button-spacing) * 2 + env(safe-area-inset-bottom) + 10px);
-      left: 10px;
-      right: 10px;
+      bottom: calc(var(--element-height) * 2 + var(--button-spacing) * 2 + env(safe-area-inset-bottom) + var(--space-2));
+      left: var(--space-2);
+      right: var(--space-2);
       background: rgba(0, 0, 0, 0.8);
       color: white;
-      padding: 10px;
+      padding: var(--space-2);
       border-radius: 8px;
       z-index: 9999;
       animation: slide-up 0.3s ease;
