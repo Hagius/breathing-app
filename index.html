@@ -1311,7 +1311,9 @@
           audio: false,
           dom: false
         },
-        hasInteracted: false // Track if user has interacted (for autoplay policies)
+        hasInteracted: false, // Track if user has interacted (for autoplay policies)
+        isPaused: false,
+        isSessionComplete: false
       };
       
       // UTILITY FUNCTIONS
@@ -1573,7 +1575,26 @@
               }
             });
           }
-        }
+        },
+         togglePause: () => {
+          if (state.isSessionComplete) {
+            // If the session is complete, restart it
+            state.isSessionComplete = false;
+            state.sessionRemaining = state.sessionDuration;
+            startSessionTimer();
+            startBreathing();
+            return;
+          }
+
+          state.isPaused = !state.isPaused;
+
+          if (state.isPaused) {
+            pauseBreathingSession();
+            state.elements.timerDisplay.innerHTML = '&#10074;&#10074;'; // Pause symbol
+          } else {
+            resumeBreathingSession();
+          }
+        },
       };
       
       // CORE FUNCTIONS
@@ -1837,6 +1858,8 @@
         }
       });
     });
+        // Pause/play on breathing circle click
+        state.elements.breathingCircle.addEventListener('click', handlers.togglePause);
       }
       
       // BREATHING CONTROL FUNCTIONS
@@ -2121,6 +2144,9 @@
         if (state.isVibrationSupported && state.hapticEnabled) {
           navigator.vibrate(HAPTIC_PATTERNS.sessionEnd);
         }
+         state.isSessionComplete = true;
+        pauseBreathingSession();
+        state.elements.timerDisplay.innerHTML = '&#8634;'; // Repeat symbol
         
         // Show custom completion modal instead of alert
         showCompletionModal(state.elements.techniqueButton.textContent, state.sessionDuration);
