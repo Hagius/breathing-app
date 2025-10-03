@@ -6,7 +6,6 @@
   <meta name="description" content="Hagius Breathing - A breathing exercise app for stress reduction and mindfulness" />
   <title>Hagius Breathing</title>
   
-  <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#214B7A">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,7 +13,6 @@
   <meta name="apple-mobile-web-app-title" content="Hagius Breathing">
   <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 
-  <!-- iOS splash screen images -->
   <link rel="apple-touch-startup-image" href="icons/apple-splash-2048-2732.jpg" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="icons/apple-splash-1668-2388.jpg" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="icons/apple-splash-1536-2048.jpg" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
@@ -928,7 +926,6 @@
   </style>
 </head>
 <body>
-  <!-- Loading Animation -->
   <div id="loadingContainer" class="loading-container">
     <div>
       <img src="monogram.png" alt="Hagius" class="logo loading-logo">
@@ -939,25 +936,19 @@
     </div>
   </div>
 
-  <!-- Toast notification container -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <!-- App Container - hidden until loaded -->
   <div id="appContainer" class="app-container">
-    <!-- Header fixed at the top -->
     <div class="header">
       <img src="logo.png" alt="Hagius" class="logo" id="mainLogo">
     </div>
     
-    <!-- Main Container centered -->
     <div class="main-container">
 
-      <!-- Breathing Circle (always animating) -->
       <div id="breathingCircle" class="breathing-circle" aria-label="Breathing animation">
         <div id="timer" class="timer" aria-live="polite">
           EXHALE
         </div>
-        <!-- Hold progress indicator (circular loading bar) - FIXED SVG -->
         <div id="holdProgress" class="hold-progress" aria-hidden="true">
           <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
             <circle id="holdProgressCircle" cx="50" cy="50" r="42.5" stroke-dasharray="267" stroke-dashoffset="0" />
@@ -966,7 +957,6 @@
       </div>
     </div>
     
-    <!-- Timer Options - Appears when progress bar is clicked -->
     <div id="timerOptions" class="timer-options" aria-label="Timer duration options">
       <div class="timer-option-buttons">
         <button data-duration="5" aria-label="5 minute session">5 MIN</button>
@@ -976,7 +966,6 @@
       </div>
     </div>
     
-    <!-- Technique Panel - Appears when technique button is clicked -->
     <div id="techniquePanel" class="technique-panel" aria-label="Breathing technique options">
       <div class="technique-buttons">
         <button data-technique="resonance" aria-label="Resonance breathing technique">Resonance</button>
@@ -987,7 +976,6 @@
       </div>
     </div>
     
-    <!-- Session Progress Bar -->
     <div class="session-progress-container">
       <div id="progressBar" class="session-progress" role="progressbar" aria-label="Session progress">
         <div id="progressIndicator" class="session-progress-bar"></div>
@@ -995,14 +983,12 @@
       </div>
     </div>
     
-    <!-- Bottom Button Container -->
     <div class="button-container" id="buttonContainer">
       <button id="techniqueButton" class="bottom-button" aria-haspopup="true" aria-expanded="false">Technique</button>
       <button id="focusButton" class="bottom-button" aria-pressed="false">Focus</button>
       <button id="installButton" class="bottom-button">Install App</button>
     </div>
     
-    <!-- Knowledge Section (hidden by default) -->
     <div id="knowledgeSection" aria-hidden="true">
       <button class="back-button" id="backButton" aria-label="Back to breathing app">Back</button>
       
@@ -1019,7 +1005,6 @@
       </div>
       
       <div class="knowledge-content">
-        <!-- Basics Info -->
         <div id="basics-info" class="technique-info active" role="tabpanel" aria-labelledby="basics-tab">
           <h2>Breathing Basics</h2>
           
@@ -1104,6 +1089,7 @@
     <li>Before bedtime to improve sleep quality</li>
     <li>When seeking to improve focus and concentration</li>
   </ul>
+   <button class="bottom-button start-exercise-button" data-technique="resonance">Start this exercise</button>
 </div>
         <div id="478-info" class="technique-info" role="tabpanel" aria-labelledby="478-tab">
   <h2>4-7-8 Breathing</h2>
@@ -1150,6 +1136,7 @@
     <li>Reducing cravings when they arise</li>
     <li>Creating a quick reset during a busy day</li>
   </ul>
+   <button class="bottom-button start-exercise-button" data-technique="478">Start this exercise</button>
 </div>
         <div id="box-info" class="technique-info" role="tabpanel" aria-labelledby="box-tab">
   <h2>Box Breathing</h2>
@@ -1196,6 +1183,7 @@
     <li>During transitions between activities in your day</li>
     <li>When you notice signs of stress or tension in your body</li>
   </ul>
+   <button class="bottom-button start-exercise-button" data-technique="box">Start this exercise</button>
 </div>
         <div id="physio-sigh-info" class="technique-info" role="tabpanel" aria-labelledby="physio-sigh-tab">
   <h2>Physiological Sighing</h2>
@@ -1241,13 +1229,12 @@
     <li>When you notice shallow breathing or breath-holding</li>
     <li>As a "first aid" breathing technique when you need immediate relief</li>
   </ul>
+   <button class="bottom-button start-exercise-button" data-technique="physio-sigh">Start this exercise</button>
 </div>
-        <!-- Other technique info sections remain unchanged -->
-      </div>
+        </div>
     </div>
   </div>
   
-  <!-- Audio Cues - Preload for faster response -->
   <audio id="audioInhale" preload="auto"></audio>
   <audio id="audioHold" preload="auto"></audio>
   <audio id="audioExhale" preload="auto"></audio>
@@ -1313,6 +1300,7 @@
         sessionStartTime: 0,
         sessionEndTime: 0,
         sessionElapsed: 0,
+        sessionRemaining: 5*60,
         sessionIntervalId: null,
         isAudioReady: false,
         isVibrationSupported: 'vibrate' in navigator,
@@ -1445,6 +1433,7 @@
         },
         
         showKnowledgeSection: () => {
+            pauseBreathingSession();
           state.elements.knowledgeSection.style.display = 'block';
           state.elements.knowledgeSection.setAttribute('aria-hidden', 'false');
           state.elements.techniquePanel.style.display = 'none';
@@ -1458,6 +1447,7 @@
         },
         
         hideKnowledgeSection: () => {
+            resumeBreathingSession();
           state.elements.knowledgeSection.style.display = 'none';
           state.elements.knowledgeSection.setAttribute('aria-hidden', 'true');
           
@@ -1511,6 +1501,7 @@
           // Set new duration
           const minutes = parseInt(btn.getAttribute('data-duration'));
           state.sessionDuration = minutes * 60;
+           state.sessionRemaining = state.sessionDuration;
           
           // Update the display immediately
           updateRemainingTimeDisplay();
@@ -1830,6 +1821,22 @@
         if (state.elements.installButton) {
           state.elements.installButton.addEventListener('click', handleInstallClick);
         }
+           // Start exercise button in knowledge section
+    const startExerciseButtons = document.querySelectorAll('.start-exercise-button');
+    startExerciseButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const technique = btn.getAttribute('data-technique');
+        const techniqueButton = document.querySelector(`.technique-panel button[data-technique="${technique}"]`);
+        
+        if (techniqueButton) {
+          // Select the technique
+          handlers.selectTechnique(techniqueButton);
+          
+          // Hide the knowledge section
+          handlers.hideKnowledgeSection();
+        }
+      });
+    });
       }
       
       // BREATHING CONTROL FUNCTIONS
@@ -2025,6 +2032,27 @@
           state.hapticEnabled = false;
         }
       }
+       // SESSION MANAGEMENT FUNCTIONS
+    function pauseBreathingSession() {
+      // Clear any existing interval
+      if (state.sessionIntervalId) {
+        clearInterval(state.sessionIntervalId);
+        state.sessionIntervalId = null;
+      }
+
+      // Cancel any existing animation frame
+      if (state.animationFrameId) {
+        cancelAnimationFrame(state.animationFrameId);
+        state.animationFrameId = null;
+      }
+    }
+     function resumeBreathingSession() {
+      // Restart the breathing animation
+      startBreathing();
+
+      // Restart the session timer
+      startSessionTimer();
+    }
       
       // SESSION TIMER FUNCTIONS
       function startSessionTimer() {
@@ -2035,16 +2063,15 @@
         
         // Set timestamp-based timer
         state.sessionStartTime = Date.now();
-        state.sessionEndTime = state.sessionStartTime + (state.sessionDuration * 1000);
-        state.sessionElapsed = 0;
+        state.sessionEndTime = state.sessionStartTime + (state.sessionRemaining * 1000);
+        state.sessionElapsed = state.sessionDuration - state.sessionRemaining;
         
         updateProgressBar();
         
         // Start new timer with 1 second updates
         state.sessionIntervalId = setInterval(() => {
           const now = Date.now();
-          const elapsed = Math.floor((now - state.sessionStartTime) / 1000);
-          state.sessionElapsed = elapsed;
+          state.sessionElapsed = Math.floor((now - state.sessionStartTime) / 1000) + (state.sessionDuration - state.sessionRemaining);
           
           updateProgressBar();
           
@@ -2073,6 +2100,7 @@
         if (!state.elements.remainingTime) return;
         
         const remainingSeconds = Math.max(0, state.sessionDuration - state.sessionElapsed);
+         state.sessionRemaining = remainingSeconds;
         const formattedTime = utils.formatTime(remainingSeconds);
         state.elements.remainingTime.textContent = formattedTime;
         
@@ -2095,17 +2123,17 @@
         }
         
         // Show custom completion modal instead of alert
-        showCompletionModal();
+        showCompletionModal(state.elements.techniqueButton.textContent, state.sessionDuration);
       }
       
-      function showCompletionModal() {
+      function showCompletionModal(technique, duration) {
         // Create modal element
         const modal = document.createElement('div');
         modal.className = 'completion-modal';
         modal.innerHTML = `
           <div class="modal-content">
             <h2>Session Complete!</h2>
-            <p>Great job completing your breathing session.</p>
+            <p>You've just completed a ${duration / 60}-minute session of ${technique} breathing.</p>
             <button id="closeModal">CONTINUE</button>
           </div>
         `;
@@ -2125,9 +2153,10 @@
           setTimeout(() => {
             modal.remove();
             // Restart session timer
+            state.sessionRemaining = state.sessionDuration;
             startSessionTimer();
           }, 300);
-        });
+        }, {once: true});
       }
       
       // PWA INSTALLATION FUNCTIONALITY
