@@ -1591,6 +1591,8 @@
           if (state.isPaused) {
             pauseBreathingSession();
             state.elements.timerDisplay.innerHTML = '&#10074;&#10074;'; // Pause symbol
+             state.elements.breathingCircle.style.transform = 'scale(0.6)';
+
           } else {
             resumeBreathingSession();
           }
@@ -2084,21 +2086,16 @@
           clearInterval(state.sessionIntervalId);
         }
         
-        // Set timestamp-based timer
-        state.sessionStartTime = Date.now();
-        state.sessionEndTime = state.sessionStartTime + (state.sessionRemaining * 1000);
-        state.sessionElapsed = state.sessionDuration - state.sessionRemaining;
-        
-        updateProgressBar();
+        state.sessionStartTime = Date.now() - state.sessionElapsed * 1000;
         
         // Start new timer with 1 second updates
         state.sessionIntervalId = setInterval(() => {
           const now = Date.now();
-          state.sessionElapsed = Math.floor((now - state.sessionStartTime) / 1000) + (state.sessionDuration - state.sessionRemaining);
+          state.sessionElapsed = Math.floor((now - state.sessionStartTime) / 1000);
           
           updateProgressBar();
           
-          if (now >= state.sessionEndTime) {
+          if (state.sessionElapsed >= state.sessionDuration) {
             endSession();
           }
         }, 1000);
@@ -2147,20 +2144,20 @@
          state.isSessionComplete = true;
         pauseBreathingSession();
         state.elements.timerDisplay.innerHTML = '&#8634;'; // Repeat symbol
-        
+         state.elements.breathingCircle.style.transform = 'scale(0.6)';
+
         // Show custom completion modal instead of alert
-        showCompletionModal(state.elements.techniqueButton.textContent, state.sessionDuration);
+        showCompletionModal();
       }
       
-      function showCompletionModal(technique, duration) {
+      function showCompletionModal() {
         // Create modal element
         const modal = document.createElement('div');
         modal.className = 'completion-modal';
         modal.innerHTML = `
           <div class="modal-content">
-            <h2>Session Complete!</h2>
-            <p>You've just completed a ${duration / 60}-minute session of ${technique} breathing.</p>
-            <button id="closeModal">CONTINUE</button>
+            <h2>You've done it!</h2>
+            <p>You've completed your breathing session.</p>
           </div>
         `;
         
@@ -2171,18 +2168,13 @@
         void modal.offsetWidth;
         modal.classList.add('visible');
         
-        // Set up event handler
-        document.getElementById('closeModal').addEventListener('click', () => {
+        // Remove after 4 seconds
+        setTimeout(() => {
           modal.classList.remove('visible');
-          
-          // Remove after transition completes
           setTimeout(() => {
             modal.remove();
-            // Restart session timer
-            state.sessionRemaining = state.sessionDuration;
-            startSessionTimer();
           }, 300);
-        }, {once: true});
+        }, 4000);
       }
       
       // PWA INSTALLATION FUNCTIONALITY
